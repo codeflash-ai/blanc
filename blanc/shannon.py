@@ -71,10 +71,12 @@ def prepare_inputs_for_generation(input_ids, past=None, **kwargs):
 
     attention_mask = kwargs.get("attention_mask", None)
     position_ids = kwargs.get("position_ids", None)
+    use_cache = kwargs.get("use_cache")
 
     if attention_mask is not None and position_ids is None:
         # create position_ids on the fly for batch generation
-        position_ids = attention_mask.long().cumsum(-1) - 1
+        position_ids = attention_mask.long().cumsum(-1)
+        position_ids.sub_(1)
         position_ids.masked_fill_(attention_mask == 0, 1)
         if past:
             position_ids = position_ids[:, -1].unsqueeze(-1)
@@ -83,7 +85,7 @@ def prepare_inputs_for_generation(input_ids, past=None, **kwargs):
     return {
         "input_ids": input_ids,
         "past_key_values": past,
-        "use_cache": kwargs.get("use_cache"),
+        "use_cache": use_cache,
         "position_ids": position_ids,
         "attention_mask": attention_mask,
     }
